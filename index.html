@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>お祭り抽選会</title>
+
+<style>
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  margin:0;background:#fff7e6;color:#222;
+}
+.wrap{max-width:520px;margin:0 auto;padding:20px}
+.card{
+  background:#ffffff;border-radius:18px;padding:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+  text-align:center;
+}
+h1{margin:0 0 10px;font-size:24px}
+.btn{
+  width:100%;padding:16px;border-radius:16px;border:none;
+  font-size:20px;font-weight:800;
+  background:#e53935;color:#fff;
+}
+.btn:disabled{opacity:.6}
+.small{font-size:13px;color:#555}
+
+/* ==== お祭り演出 ==== */
+#animation{display:none;margin-top:20px}
+.drum{
+  width:140px;height:140px;border-radius:50%;
+  background:
+    radial-gradient(circle at center, #fff 0%, #fff 35%, #e53935 36%, #e53935 100%);
+  margin:0 auto;
+  animation:spin 0.4s linear infinite;
+}
+@keyframes spin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+.lantern{
+  font-size:26px;margin:6px;
+  animation:float 1s ease-in-out infinite alternate;
+}
+@keyframes float{
+  from{transform:translateY(0)}
+  to{transform:translateY(-6px)}
+}
+
+/* ==== 結果 ==== */
+.result{display:none;margin-top:18px;padding:18px;border-radius:16px}
+.r1{background:#fff3b0}
+.r2{background:#e1f5fe}
+.r3{background:#eeeeee}
+.rank{font-size:30px;font-weight:900;margin:10px 0}
+.code{font-family:monospace;background:#f4f4f4;padding:4px 8px;border-radius:8px}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🎯 お祭り抽選会 🎯</h1>
+    <p>ボタンを押してガラガラ抽選！</p>
+
+    <button id="drawBtn" class="btn">抽選する</button>
+
+    <!-- 演出 -->
+    <div id="animation">
+      <div class="lantern">🏮🏮🏮</div>
+      <div class="drum"></div>
+      <p style="font-weight:700;margin-top:10px">ガラガラ抽選中…</p>
+    </div>
+
+    <!-- 結果 -->
+    <div id="result" class="result">
+      <div id="rank" class="rank"></div>
+      <p id="msg"></p>
+      <p class="small">スタッフにこの画面をお見せください</p>
+      <p class="small">管理コード：<span id="code" class="code"></span></p>
+    </div>
+
+    <p class="small" style="margin-top:14px">
+      ※ 当日お一人様1回<br>
+      ※ 景品はスタッフ確認後にお渡しします
+    </p>
+  </div>
+</div>
+
+<script>
+// ===== 確率設定（内部のみ）=====
+const prizes = [
+  {name:"🎊 1等 🎊", rate:2.5, cls:"r1"},
+  {name:"✨ 2等 ✨", rate:2.5, cls:"r2"},
+  {name:"🥉 3等 🥉", rate:95, cls:"r3"}
+];
+
+const drawBtn = document.getElementById("drawBtn");
+const animation = document.getElementById("animation");
+const result = document.getElementById("result");
+const rank = document.getElementById("rank");
+const msg = document.getElementById("msg");
+const codeEl = document.getElementById("code");
+
+function pickPrize(){
+  let r = Math.random()*100, acc=0;
+  for(const p of prizes){
+    acc += p.rate;
+    if(r < acc) return p;
+  }
+  return prizes[2];
+}
+
+drawBtn.addEventListener("click", ()=>{
+  drawBtn.disabled = true;
+
+  const prize = pickPrize(); // ← 裏で先に決定
+
+  animation.style.display = "block";
+  result.style.display = "none";
+
+  setTimeout(()=>{
+    animation.style.display = "none";
+    result.className = "result " + prize.cls;
+    rank.textContent = prize.name;
+    msg.textContent = "おめでとうございます！";
+    codeEl.textContent =
+      new Date().toISOString().slice(0,10).replace(/-/g,"") +
+      "-" + Math.floor(Math.random()*900000+100000);
+    result.style.display = "block";
+  }, 2500); // ★お祭り演出時間
+});
+</script>
+</body>
+</html>
