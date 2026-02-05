@@ -3,133 +3,514 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>お祭り抽選会</title>
-
+<title>ガチャ抽選</title>
 <style>
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
-  margin:0;background:#fff7e6;color:#222;
-}
-.wrap{max-width:520px;margin:0 auto;padding:20px}
-.card{
-  background:#ffffff;border-radius:18px;padding:22px;
-  box-shadow:0 10px 30px rgba(0,0,0,.12);
-  text-align:center;
-}
-h1{margin:0 0 10px;font-size:24px}
-.btn{
-  width:100%;padding:16px;border-radius:16px;border:none;
-  font-size:20px;font-weight:800;
-  background:#e53935;color:#fff;
-}
-.btn:disabled{opacity:.6}
-.small{font-size:13px;color:#555}
+  :root{
+    --bg:#0f172a;
+    --panel:#111827;
+    --panel2:#0b1220;
+    --accent:#ef4444;
+    --accent2:#22c55e;
+    --gold:#fbbf24;
+    --silver:#93c5fd;
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    background: radial-gradient(1200px 700px at 50% -10%, #1f2937 0%, var(--bg) 55%, #050814 100%);
+    color:var(--text);
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:18px}
+  .title{
+    text-align:center;margin:6px 0 12px;
+    font-weight:900;letter-spacing:.03em;
+    font-size:22px;
+  }
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 16px 50px rgba(0,0,0,.35);
+  }
+  .hint{margin:10px 0 14px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
 
-/* ==== お祭り演出 ==== */
-#animation{display:none;margin-top:20px}
-.drum{
-  width:140px;height:140px;border-radius:50%;
-  background:
-    radial-gradient(circle at center, #fff 0%, #fff 35%, #e53935 36%, #e53935 100%);
-  margin:0 auto;
-  animation:spin 0.4s linear infinite;
-}
-@keyframes spin{
-  from{transform:rotate(0deg)}
-  to{transform:rotate(360deg)}
-}
-.lantern{
-  font-size:26px;margin:6px;
-  animation:float 1s ease-in-out infinite alternate;
-}
-@keyframes float{
-  from{transform:translateY(0)}
-  to{transform:translateY(-6px)}
-}
+  /* ===== ガチャ筐体 ===== */
+  .machine{
+    position:relative;
+    width:100%;
+    aspect-ratio: 1 / 1.2;
+    border-radius:22px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)),
+      radial-gradient(120px 80px at 30% 20%, rgba(255,255,255,.10), transparent 60%),
+      radial-gradient(120px 80px at 70% 20%, rgba(255,255,255,.08), transparent 60%),
+      linear-gradient(180deg, #111827, #0b1220);
+    border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;
+  }
+  .topStripe{
+    position:absolute;left:0;right:0;top:0;height:12%;
+    background: repeating-linear-gradient(90deg, rgba(239,68,68,.85) 0 18px, rgba(255,255,255,.85) 18px 36px);
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.25));
+  }
+  .logo{
+    position:absolute;top:6%;left:50%;transform:translateX(-50%);
+    padding:6px 12px;border-radius:999px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.16);
+    font-weight:900;font-size:13px;letter-spacing:.08em;
+  }
 
-/* ==== 結果 ==== */
-.result{display:none;margin-top:18px;padding:18px;border-radius:16px}
-.r1{background:#fff3b0}
-.r2{background:#e1f5fe}
-.r3{background:#eeeeee}
-.rank{font-size:30px;font-weight:900;margin:10px 0}
-.code{font-family:monospace;background:#f4f4f4;padding:4px 8px;border-radius:8px}
+  /* 透明ドーム */
+  .dome{
+    position:absolute;left:10%;right:10%;top:14%;height:40%;
+    border-radius:22px;
+    background: radial-gradient(120px 90px at 30% 25%, rgba(255,255,255,.18), transparent 60%),
+                linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.18);
+    overflow:hidden;
+  }
+  .balls{
+    position:absolute;inset:0;
+    display:flex;flex-wrap:wrap;align-content:flex-end;
+    gap:10px;padding:14px;
+    opacity:.95;
+  }
+  .ball{
+    width:28px;height:28px;border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 45%),
+                radial-gradient(circle at 70% 70%, rgba(0,0,0,.35), rgba(0,0,0,0) 55%),
+                var(--c);
+    border:1px solid rgba(255,255,255,.18);
+    transform:translateY(0);
+    animation:floaty 2.8s ease-in-out infinite;
+  }
+  .ball:nth-child(2n){animation-duration:3.4s}
+  .ball:nth-child(3n){animation-duration:4.1s}
+  @keyframes floaty{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-8px)}
+  }
+
+  /* 下部操作パネル */
+  .panel{
+    position:absolute;left:0;right:0;bottom:0;height:40%;
+    background: linear-gradient(180deg, rgba(0,0,0,.0), rgba(0,0,0,.20) 10%, rgba(0,0,0,.32)),
+                linear-gradient(180deg, #0b1220, #050814);
+    border-top:1px solid rgba(255,255,255,.10);
+  }
+  .panelInner{
+    position:absolute;left:8%;right:8%;top:10%;bottom:10%;
+    display:grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap:12px;
+    align-items:center;
+  }
+
+  /* 投入口 */
+  .coinBox{
+    background: rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;
+    padding:12px;
+  }
+  .coinSlot{
+    height:14px;border-radius:999px;
+    background: rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.10);
+    margin:10px 0 6px;
+    position:relative;
+    overflow:hidden;
+  }
+  .coin{
+    width:28px;height:28px;border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 45%),
+                radial-gradient(circle at 70% 70%, rgba(0,0,0,.35), rgba(0,0,0,0) 55%),
+                linear-gradient(180deg, #fde68a, #f59e0b);
+    border:1px solid rgba(255,255,255,.25);
+    position:absolute;left:50%;top:-34px;transform:translateX(-50%);
+    display:none;
+  }
+  .coin.drop{
+    display:block;
+    animation: coinDrop .75s ease-in forwards;
+  }
+  @keyframes coinDrop{
+    0%{top:-34px;opacity:0}
+    10%{opacity:1}
+    70%{top:-2px}
+    100%{top:22px;opacity:0}
+  }
+
+  /* ハンドル */
+  .handleWrap{
+    text-align:center;
+  }
+  .handleBase{
+    width:120px;height:120px;border-radius:50%;
+    margin:0 auto;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.12), rgba(255,255,255,0) 55%),
+                linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.14);
+    position:relative;
+  }
+  .handleKnob{
+    width:36px;height:36px;border-radius:50%;
+    background: linear-gradient(180deg, #fca5a5, #ef4444);
+    border:1px solid rgba(255,255,255,.20);
+    position:absolute;left:50%;top:6px;transform:translateX(-50%);
+    box-shadow:0 10px 18px rgba(0,0,0,.35);
+  }
+  .handleLine{
+    position:absolute;left:50%;top:18px;width:6px;height:56px;
+    transform:translateX(-50%);
+    background: rgba(255,255,255,.16);
+    border-radius:999px;
+  }
+  .spin .handleBase{animation:spin 0.95s ease-in-out 1;}
+  @keyframes spin{
+    0%{transform:rotate(0deg)}
+    100%{transform:rotate(360deg)}
+  }
+
+  /* 排出口 & カプセル */
+  .chute{
+    position:absolute;left:50%;bottom:10%;
+    width:72%;max-width:320px;height:70px;
+    transform:translateX(-50%);
+    border-radius:16px;
+    background: rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.10);
+    overflow:hidden;
+  }
+  .capsule{
+    position:absolute;left:50%;top:-54px;
+    width:54px;height:54px;border-radius:50%;
+    transform:translateX(-50%);
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 45%),
+      linear-gradient(180deg, #60a5fa 0 50%, #fb7185 50% 100%);
+    border:1px solid rgba(255,255,255,.22);
+    display:none;
+  }
+  .capsule.drop{display:block; animation:capsuleDrop .85s cubic-bezier(.25,.9,.25,1) forwards;}
+  @keyframes capsuleDrop{
+    0%{top:-54px}
+    75%{top:8px}
+    100%{top:10px}
+  }
+
+  /* オーバーレイ（開ける演出） */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.60);
+    display:none;
+    align-items:center;justify-content:center;
+    padding:18px;
+    z-index:50;
+  }
+  .modal{
+    width:min(520px,100%);
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:18px;
+    padding:16px;
+    text-align:center;
+    box-shadow:0 18px 60px rgba(0,0,0,.5);
+  }
+  .bigCapsule{
+    width:140px;height:140px;border-radius:50%;
+    margin:6px auto 10px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 45%),
+      linear-gradient(180deg, #60a5fa 0 50%, #fb7185 50% 100%);
+    border:1px solid rgba(255,255,255,.22);
+    position:relative;
+  }
+  .bigCapsule::after{
+    content:"";
+    position:absolute;left:8%;right:8%;top:50%;
+    height:2px;background:rgba(255,255,255,.35);
+  }
+  .shake{animation:shake .55s ease-in-out 1;}
+  @keyframes shake{
+    0%,100%{transform:rotate(0deg)}
+    20%{transform:rotate(-6deg)}
+    40%{transform:rotate(6deg)}
+    60%{transform:rotate(-5deg)}
+    80%{transform:rotate(5deg)}
+  }
+
+  .btnRow{display:grid;gap:10px;margin-top:10px}
+  button{
+    border:none;border-radius:14px;
+    padding:14px 14px;
+    font-size:17px;font-weight:900;
+    color:#0b1220;
+    background:#f3f4f6;
+  }
+  .primary{background:linear-gradient(180deg, #fef08a, #f59e0b); }
+  .danger{background:linear-gradient(180deg, #fca5a5, #ef4444); color:#fff;}
+  .success{background:linear-gradient(180deg, #86efac, #22c55e); color:#052e1a;}
+  button:disabled{opacity:.55}
+
+  .resultBox{
+    margin-top:12px;
+    border-radius:16px;
+    padding:14px;
+    display:none;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+  }
+  .rank{
+    font-size:30px;font-weight:1000;margin:6px 0 8px;
+    letter-spacing:.04em;
+  }
+  .r1{background:rgba(251,191,36,.18)}
+  .r2{background:rgba(147,197,253,.16)}
+  .r3{background:rgba(156,163,175,.14)}
+  .code{
+    display:inline-block;
+    padding:4px 8px;border-radius:10px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.14);
+    font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    font-size:13px;
+  }
+
+  .foot{margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5;text-align:center}
 </style>
 </head>
-
 <body>
 <div class="wrap">
+  <div class="title">🎰 ガチャ抽選 🎰</div>
+
   <div class="card">
-    <h1>🎯 お祭り抽選会 🎯</h1>
-    <p>ボタンを押してガラガラ抽選！</p>
-
-    <button id="drawBtn" class="btn">抽選する</button>
-
-    <!-- 演出 -->
-    <div id="animation">
-      <div class="lantern">🏮🏮🏮</div>
-      <div class="drum"></div>
-      <p style="font-weight:700;margin-top:10px">ガラガラ抽選中…</p>
+    <div class="hint">
+      「100円投入」→「ハンドルを回す」→ カプセルを開けて結果！
     </div>
 
-    <!-- 結果 -->
-    <div id="result" class="result">
-      <div id="rank" class="rank"></div>
-      <p id="msg"></p>
-      <p class="small">スタッフにこの画面をお見せください</p>
-      <p class="small">管理コード：<span id="code" class="code"></span></p>
+    <div class="machine" id="machine">
+      <div class="topStripe"></div>
+      <div class="logo">GACHA LOTTERY</div>
+
+      <div class="dome">
+        <div class="balls" aria-hidden="true">
+          <div class="ball" style="--c:#60a5fa"></div>
+          <div class="ball" style="--c:#fb7185"></div>
+          <div class="ball" style="--c:#34d399"></div>
+          <div class="ball" style="--c:#fbbf24"></div>
+          <div class="ball" style="--c:#a78bfa"></div>
+          <div class="ball" style="--c:#f97316"></div>
+          <div class="ball" style="--c:#22d3ee"></div>
+          <div class="ball" style="--c:#f472b6"></div>
+          <div class="ball" style="--c:#84cc16"></div>
+          <div class="ball" style="--c:#e879f9"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panelInner">
+          <div class="coinBox">
+            <div style="font-weight:900">100円投入</div>
+            <div class="coinSlot">
+              <div id="coin" class="coin"></div>
+            </div>
+            <button id="insertBtn" class="success">100円を入れる</button>
+          </div>
+
+          <div class="handleWrap" id="handleWrap">
+            <div style="font-weight:900;margin-bottom:8px">ハンドル</div>
+            <div class="handleBase" id="handleBase">
+              <div class="handleKnob"></div>
+              <div class="handleLine"></div>
+            </div>
+            <button id="spinBtn" class="danger" disabled>回す！</button>
+          </div>
+        </div>
+
+        <div class="chute">
+          <div id="capsule" class="capsule"></div>
+        </div>
+      </div>
     </div>
 
-    <p class="small" style="margin-top:14px">
-      ※ 当日お一人様1回<br>
-      ※ 景品はスタッフ確認後にお渡しします
-    </p>
+    <div id="resultBox" class="resultBox">
+      <div id="rank" class="rank">—</div>
+      <div id="msg">—</div>
+      <div style="margin-top:8px;color:var(--muted);font-size:13px">
+        スタッフにこの画面をお見せください
+      </div>
+      <div style="margin-top:10px;color:var(--muted);font-size:12px">
+        管理コード： <span id="code" class="code">—</span>
+      </div>
+    </div>
+
+    <div class="foot">
+      ※ 当日お一人様1回（端末目安）／景品はスタッフ確認後にお渡しします
+    </div>
+  </div>
+</div>
+
+<!-- 開けるモーダル -->
+<div id="overlay" class="overlay">
+  <div class="modal">
+    <div style="font-weight:1000;letter-spacing:.05em">カプセルを開けてね！</div>
+    <div id="bigCapsule" class="bigCapsule"></div>
+    <div class="btnRow">
+      <button id="openBtn" class="primary">カプセルを開ける</button>
+      <button id="closeBtn">閉じる</button>
+    </div>
+    <div style="margin-top:8px;color:var(--muted);font-size:12px">
+      ※ 開ける前に戻ると結果が見えません
+    </div>
   </div>
 </div>
 
 <script>
-// ===== 確率設定（内部のみ）=====
-const prizes = [
-  {name:"🎊 1等 🎊", rate:2.5, cls:"r1"},
-  {name:"✨ 2等 ✨", rate:2.5, cls:"r2"},
-  {name:"🥉 3等 🥉", rate:95, cls:"r3"}
-];
+  // ===== 確率（内部のみ）=====
+  const PRIZES = [
+    { name: "🏆 1等", rate: 2.5, cls: "r1", msg: "大当たり！！おめでとうございます！" },
+    { name: "🥈 2等", rate: 2.5, cls: "r2", msg: "当たり！やったね！" },
+    { name: "🥉 3等", rate: 95.0, cls: "r3", msg: "ご参加ありがとうございます！" },
+  ];
 
-const drawBtn = document.getElementById("drawBtn");
-const animation = document.getElementById("animation");
-const result = document.getElementById("result");
-const rank = document.getElementById("rank");
-const msg = document.getElementById("msg");
-const codeEl = document.getElementById("code");
+  // 端末ごと当日1回（必要なければ false に）
+  const DAILY_LIMIT = true;
+  const STORAGE_KEY = "gacha_lottery_draw_";
 
-function pickPrize(){
-  let r = Math.random()*100, acc=0;
-  for(const p of prizes){
-    acc += p.rate;
-    if(r < acc) return p;
+  const insertBtn = document.getElementById("insertBtn");
+  const spinBtn = document.getElementById("spinBtn");
+  const coin = document.getElementById("coin");
+  const handleWrap = document.getElementById("handleWrap");
+  const handleBase = document.getElementById("handleBase");
+  const capsule = document.getElementById("capsule");
+
+  const overlay = document.getElementById("overlay");
+  const openBtn = document.getElementById("openBtn");
+  const closeBtn = document.getElementById("closeBtn");
+  const bigCapsule = document.getElementById("bigCapsule");
+
+  const resultBox = document.getElementById("resultBox");
+  const rankEl = document.getElementById("rank");
+  const msgEl = document.getElementById("msg");
+  const codeEl = document.getElementById("code");
+
+  let selectedPrize = null;
+  let coinInserted = false;
+
+  function yyyymmdd(d=new Date()){
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}${m}${day}`;
   }
-  return prizes[2];
-}
+  function alreadyDrawnToday(){
+    if(!DAILY_LIMIT) return false;
+    return localStorage.getItem(STORAGE_KEY + yyyymmdd()) === "1";
+  }
+  function setDrawnToday(){
+    if(!DAILY_LIMIT) return;
+    localStorage.setItem(STORAGE_KEY + yyyymmdd(), "1");
+  }
 
-drawBtn.addEventListener("click", ()=>{
-  drawBtn.disabled = true;
+  function pickPrize(){
+    const r = Math.random() * 100;
+    let acc = 0;
+    for(const p of PRIZES){
+      acc += p.rate;
+      if(r < acc) return p;
+    }
+    return PRIZES[PRIZES.length-1];
+  }
 
-  const prize = pickPrize(); // ← 裏で先に決定
+  function makeCode(prizeName){
+    const rand = Math.floor(Math.random()*900000)+100000;
+    return `${yyyymmdd()}-${prizeName.replace(/\s/g,"")}-${rand}`;
+  }
 
-  animation.style.display = "block";
-  result.style.display = "none";
+  function lockAsDone(){
+    insertBtn.disabled = true;
+    spinBtn.disabled = true;
+    insertBtn.textContent = "本日は抽選済み";
+    spinBtn.textContent = "本日は抽選済み";
+    resultBox.style.display = "block";
+    resultBox.className = "resultBox r3";
+    rankEl.textContent = "✅ 今日は抽選済みです";
+    msgEl.textContent = "恐れ入りますが、本日の抽選は終了です。スタッフにお声がけください。";
+    codeEl.textContent = `${yyyymmdd()}-DONE`;
+  }
 
-  setTimeout(()=>{
-    animation.style.display = "none";
-    result.className = "result " + prize.cls;
-    rank.textContent = prize.name;
-    msg.textContent = "おめでとうございます！";
-    codeEl.textContent =
-      new Date().toISOString().slice(0,10).replace(/-/g,"") +
-      "-" + Math.floor(Math.random()*900000+100000);
-    result.style.display = "block";
-  }, 2500); // ★お祭り演出時間
-});
+  if(alreadyDrawnToday()){
+    lockAsDone();
+  }
+
+  insertBtn.addEventListener("click", ()=>{
+    if(alreadyDrawnToday()) return lockAsDone();
+
+    // 裏で結果は決めておく（見せるのは後）
+    selectedPrize = pickPrize();
+
+    // コイン演出
+    coin.classList.remove("drop");
+    void coin.offsetWidth; // 再生トリガー
+    coin.classList.add("drop");
+
+    coinInserted = true;
+    insertBtn.disabled = true;
+    insertBtn.textContent = "投入済み";
+    spinBtn.disabled = false;
+  });
+
+  spinBtn.addEventListener("click", ()=>{
+    if(!coinInserted || !selectedPrize) return;
+    spinBtn.disabled = true;
+
+    // ハンドル回転演出
+    handleWrap.classList.remove("spin");
+    void handleWrap.offsetWidth;
+    handleWrap.classList.add("spin");
+
+    // カプセル落下（ハンドル回転に合わせる）
+    setTimeout(()=>{
+      capsule.classList.remove("drop");
+      void capsule.offsetWidth;
+      capsule.classList.add("drop");
+    }, 650);
+
+    // 落ちたら「開ける」へ
+    setTimeout(()=>{
+      overlay.style.display = "flex";
+      bigCapsule.classList.remove("shake");
+      void bigCapsule.offsetWidth;
+      bigCapsule.classList.add("shake");
+    }, 1250);
+  });
+
+  openBtn.addEventListener("click", ()=>{
+    // 結果確定（このタイミングで「見せる」）
+    setDrawnToday();
+
+    resultBox.style.display = "block";
+    resultBox.className = "resultBox " + selectedPrize.cls;
+    rankEl.textContent = selectedPrize.name;
+    msgEl.textContent = selectedPrize.msg;
+    codeEl.textContent = makeCode(selectedPrize.name);
+
+    overlay.style.display = "none";
+
+    // 以降は触れないように
+    openBtn.disabled = true;
+    closeBtn.textContent = "閉じる";
+  });
+
+  closeBtn.addEventListener("click", ()=>{
+    overlay.style.display = "none";
+  });
 </script>
 </body>
 </html>
